@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="color-scheme" content="light">
+  <title>2FA 动态验证码工具 | APKBang</title>
+  <meta name="description" content="使用浏览器本机时间生成 2FA 动态验证码，密钥不会上传或保存。">
+  <script>
+    (() => {
+      const path = location.pathname;
+      const match = path.match(/^(.*)\/2fa\/(?:agent\/([0-9]{1,19})\/)?([^/]+)\/?$/i);
+      const query = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(location.hash.slice(1));
+      const secret = match ? match[3] : (hash.get('secret') || query.get('secret') || '');
+      const agent = match?.[2] || query.get('agent') || '';
+      const toolRoute = path.match(/^(.*)\/2fa(?:\/|$)/i);
+      const root = toolRoute ? `${toolRoute[1]}/` : new URL('.', location.href).pathname;
+      const base = document.createElement('base');
+      base.href = location.protocol === 'file:' ? new URL('.', location.href).href : `${location.origin}${root}`;
+      document.head.append(base);
+      window.apkbangDirectSecret = secret;
+      window.apkbangAgentCode = /^[0-9]{1,19}$/.test(agent) ? agent : '';
+      if (secret || query.has('secret') || hash.has('secret')) {
+        const cleanPath = match
+          ? `${match[1]}/2fa/${agent ? `agent/${agent}/` : ''}`
+          : path;
+        history.replaceState(null, '', cleanPath + (agent && !match ? `?agent=${agent}` : ''));
+      }
+    })();
+  </script>
+  <link rel="icon" type="image/webp" href="logo.webp">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="https://www.apkbang.com/" aria-label="返回 APKBang 官网">
+      <img src="logo.webp" alt="" width="44" height="44">
+      <span>APKBang</span>
+    </a>
+    <span class="header-label">账号安全工具</span>
+  </header>
+
+  <main class="page">
+    <section class="intro" aria-labelledby="page-title">
+      <span class="intro-mark" aria-hidden="true">2FA</span>
+      <div>
+        <span class="eyebrow">ACCOUNT SECURITY</span>
+        <span class="agent-badge" id="agent-badge" hidden>您的专属工具</span>
+        <h1 id="page-title">2FA 动态验证码工具</h1>
+        <p>输入双重验证密钥，即时生成每 30 秒更新的 6 位验证码。</p>
+      </div>
+    </section>
+
+    <section class="tool" aria-labelledby="tool-title">
+      <div class="tool-heading">
+        <h2 id="tool-title">生成动态验证码</h2>
+      </div>
+
+      <div class="workspace">
+        <form class="secret-form" id="secret-form" novalidate>
+          <label for="secret">2FA 密钥</label>
+          <div class="secret-field">
+            <input id="secret" type="password" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="请输入2FA 密钥" aria-describedby="secret-help">
+            <button type="button" id="visibility" aria-label="显示密钥">显示</button>
+          </div>
+          <small id="secret-help">支持 Base32 密钥、标准 otpauth:// 链接，以及密钥直达链接。</small>
+          <button class="primary generate" type="submit">生成验证码</button>
+          <button class="clear" id="clear" type="button">清空密钥和验证码</button>
+        </form>
+
+        <div class="result is-empty" id="result">
+          <div class="result-heading">
+            <span class="status" id="status" aria-live="polite">等待输入密钥</span>
+            <div class="timer is-safe" id="timer"><span>本轮剩余</span><b id="seconds">30</b><small>秒</small></div>
+          </div>
+          <div class="code-grid">
+            <div class="code-cell"><span>上一组</span><strong id="code-previous">--- ---</strong><small>已过期</small><button type="button" data-copy="previous" disabled>复制</button></div>
+            <div class="code-cell is-current"><span>当前组</span><strong id="code-current">--- ---</strong><small>正在使用</small><button type="button" data-copy="current" disabled>复制</button></div>
+            <div class="code-cell"><span>下一组</span><strong id="code-next">--- ---</strong><small>待生效</small><button type="button" data-copy="next" disabled>复制</button></div>
+          </div>
+          <p class="error" id="error" role="alert" hidden></p>
+        </div>
+      </div>
+
+      <p class="privacy">手工输入的密钥只留在当前页面内存中，不会上传或保存。网址携带密钥时，托管服务会收到首次请求；页面会立即从地址栏移除密钥，请勿分享包含密钥的网址。</p>
+    </section>
+
+    <aside class="guide" aria-labelledby="guide-title">
+      <div><span class="eyebrow">使用说明</span><h2 id="guide-title">从哪里找到 2FA 密钥？</h2></div>
+      <ol>
+        <li>在账号安全设置中开启双重验证或身份验证器。</li>
+        <li>复制页面提供的密钥，或粘贴 otpauth:// 链接。</li>
+        <li>生成验证码后，在目标网站完成验证；到期会自动更新。</li>
+      </ol>
+      <div class="time-help"><strong>时间不准确？</strong><p>验证码按本机时间计算。若一直无效，请在设备设置中开启自动日期与时间，再刷新页面。</p></div>
+      <p class="security-note">2FA 密钥相当于账号安全凭据，请勿发给他人，也不要在公共设备上使用。</p>
+    </aside>
+  </main>
+
+</body>
+</html>
