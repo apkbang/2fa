@@ -1,7 +1,7 @@
 # APKBang 2FA 网页源码
 
 独立静态页面，适合放在 GitHub 仓库或开启 GitHub Pages。无需 PHP、数据库、构建工具或第三方脚本。
-
+示例：https://www.apkbang.com/2fa/3NCT4JV7BJS4IGYH
 ## 文件
 
 - `index.html`：页面与直达链接入口
